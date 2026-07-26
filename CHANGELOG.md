@@ -16,4 +16,4 @@ Initial release.
 - Single `->modifyQueryUsing()` scope applied to both the resource and every timeline
 - Subject labels for models no Filament resource manages, via `->subjectLabelNamespace()`
 - German and English translations
-- Tested against SQLite, MySQL 8 and PostgreSQL 17, on PHP 8.2 to 8.5
+- Tested against SQLite, MySQL 8 and PostgreSQL 17, on PHP 8.3 to 8.5

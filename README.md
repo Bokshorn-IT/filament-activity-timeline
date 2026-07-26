@@ -39,9 +39,9 @@ There are two ways to read the log: a slide-over timeline on a record, and a fil
 
 | Plugin | Filament | Laravel | PHP |
 |---|---|---|---|
-| 1.x | 5.x | 12.x, 13.x | 8.2+ |
+| 1.x | 5.x | 12.x, 13.x | 8.3+ |
 
-The suite runs against SQLite, MySQL 8 and PostgreSQL 17.
+Every one of those is covered by CI, on SQLite, MySQL 8 and PostgreSQL 17.
 
 ## Installation
 

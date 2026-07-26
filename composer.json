@@ -25,7 +25,7 @@
         "security": "https://github.com/Bokshorn-IT/filament-activity-timeline/security/policy"
     },
     "require": {
-        "php": "^8.2",
+        "php": "^8.3",
         "filament/filament": "^5.0",
         "illuminate/contracts": "^12.0|^13.0",
         "spatie/laravel-activitylog": "^4.12",
