@@ -1,20 +1,28 @@
+<div class="filament-hidden">
+
 # Filament Activity Timeline
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/bokshorn-it/filament-activity-timeline.svg?style=flat-square)](https://packagist.org/packages/bokshorn-it/filament-activity-timeline)
 [![Tests](https://img.shields.io/github/actions/workflow/status/Bokshorn-IT/filament-activity-timeline/ci.yml?branch=main&label=tests&style=flat-square)](https://github.com/Bokshorn-IT/filament-activity-timeline/actions?query=workflow%3ACI+branch%3Amain)
 [![Total Downloads](https://img.shields.io/packagist/dt/bokshorn-it/filament-activity-timeline.svg?style=flat-square)](https://packagist.org/packages/bokshorn-it/filament-activity-timeline)
 
+</div>
+
 A Filament plugin that makes [spatie/laravel-activitylog](https://github.com/spatie/laravel-activitylog) readable.
 
 The log stores raw database values. A change comes back looking like this:
 
 ```json
-{ "status": 2, "owner_id": 14, "due_date": "2026-07-31T00:00:00.000000Z" }
+{ "status": 2, "author_id": 14, "due_date": "2026-08-14T00:00:00.000000Z" }
 ```
 
-Accurate, and useless to look at. This package renders the same entry as **Status: Draft → Published**, **Owner: Alex Rivera → Sam Okafor**, **Due date: 31.07.2026**, by running every value back through the subject model's own casts and relationships. A diff ends up reading the way the record does on screen.
+Accurate, and useless to look at. This package renders the same entry as **Status: Draft → Published**, **Author: Alex Rivera → Sam Okafor**, **Due date: 14.08.2026**, by running every value back through the subject model's own casts and relationships. A diff ends up reading the way the record does on screen.
+
+<div class="filament-hidden">
 
 ![The activity timeline in light and dark mode](https://raw.githubusercontent.com/Bokshorn-IT/filament-activity-timeline/main/screenshots/timeline.png)
+
+</div>
 
 There are two ways to read the log: that slide-over timeline on a record, and a filterable resource across everything.
 
@@ -157,7 +165,7 @@ Only your application knows what its columns mean, so diff labels come from a tr
 
 ```php
 return [
-    'owner_id' => 'Owner',
+    'author_id' => 'Author',
     'due_date' => 'Due date',
     'published_at' => 'Published',
 ];
@@ -317,6 +325,8 @@ vendor/bin/testbench serve
 
 Then open `/demo` and sign in with `demo@example.com` / `password`.
 
+<div class="filament-hidden">
+
 ## Testing
 
 ```bash
@@ -343,3 +353,5 @@ Please review [our security policy](SECURITY.md) on how to report security vulne
 ## License
 
 The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
+
+</div>
