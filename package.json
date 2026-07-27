@@ -1,0 +1,10 @@
+{
+    "private": true,
+    "scripts": {
+        "demo:css": "tailwindcss -i workbench/resources/css/demo.css -o vendor/orchestra/testbench-core/laravel/public/demo.css --minify"
+    },
+    "devDependencies": {
+        "@tailwindcss/cli": "^4.0.0",
+        "tailwindcss": "^4.0.0"
+    }
+}

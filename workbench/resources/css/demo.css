@@ -1,0 +1,8 @@
+@import '../../../vendor/filament/filament/resources/css/theme.css';
+
+/* The line every host application has to add. Without it the timeline's own
+   utility classes are never generated and it renders unstyled. */
+@source '../../../resources/views/**/*.blade.php';
+
+@source '../../../vendor/filament/**/*.blade.php';
+@source '../../app/Filament/**/*.php';

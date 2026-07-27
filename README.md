@@ -12,17 +12,11 @@ The log stores raw database values. A change comes back looking like this:
 { "status": 2, "owner_id": 14, "due_date": "2026-07-31T00:00:00.000000Z" }
 ```
 
-Accurate, and useless to look at. This package renders the same entry as:
+Accurate, and useless to look at. This package renders the same entry as **Status: Draft → Published**, **Owner: Alex Rivera → Sam Okafor**, **Due date: 31.07.2026**, by running every value back through the subject model's own casts and relationships. A diff ends up reading the way the record does on screen.
 
-| Field | | |
-|---|---|---|
-| Status | ~~Draft~~ | Published |
-| Owner | ~~Alex Rivera~~ | Jane Doe |
-| Due date | | 31.07.2026 |
+![The activity timeline in light and dark mode](https://raw.githubusercontent.com/Bokshorn-IT/filament-activity-timeline/main/screenshots/timeline.png)
 
-It does that by running every value back through the subject model's own casts and relationships, so a diff reads the way the record does on screen.
-
-There are two ways to read the log: a slide-over timeline on a record, and a filterable resource across everything.
+There are two ways to read the log: that slide-over timeline on a record, and a filterable resource across everything.
 
 ## Features
 
@@ -306,6 +300,22 @@ ActivityTimelinePlugin::make()
     ->timelineLimit(50)
     ->placeholder('-')
 ```
+
+## Trying it
+
+The repository ships a demo application. It runs a stock Filament panel with a
+few articles that already have a history worth looking at, which is where the
+screenshot above comes from:
+
+```bash
+composer install
+npm install && npm run demo:css
+vendor/bin/testbench workbench:build
+vendor/bin/testbench db:seed --class="Workbench\Database\Seeders\DatabaseSeeder"
+vendor/bin/testbench serve
+```
+
+Then open `/demo` and sign in with `demo@example.com` / `password`.
 
 ## Testing
 

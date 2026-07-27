@@ -1,4 +1,5 @@
 /vendor
+/node_modules
 /build
 /.idea
 /.vscode
@@ -6,3 +7,8 @@
 .phpunit.result.cache
 phpunit.xml
 composer.lock
+package-lock.json
+
+# Testbench's generated skeleton and the workbench's local sqlite file.
+/workbench/storage
+/.phpunit.cache
