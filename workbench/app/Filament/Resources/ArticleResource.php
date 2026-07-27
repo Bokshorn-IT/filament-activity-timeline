@@ -35,10 +35,9 @@ class ArticleResource extends Resource
         return $schema->components([
             TextInput::make('title')->required()->columnSpanFull(),
             Select::make('status')->options(ArticleStatus::class)->required(),
-            Select::make('author_id')->relationship('author', 'name')->label('Owner'),
+            Select::make('author_id')->relationship('author', 'name')->label('Author'),
             DatePicker::make('due_date')->native(false),
             DateTimePicker::make('published_at')->native(false),
-            TextInput::make('reading_minutes')->numeric(),
             Toggle::make('is_featured'),
         ]);
     }
@@ -49,7 +48,7 @@ class ArticleResource extends Resource
             ->columns([
                 TextColumn::make('title')->searchable()->sortable(),
                 TextColumn::make('status')->badge()->sortable(),
-                TextColumn::make('author.name')->label('Owner'),
+                TextColumn::make('author.name')->label('Author'),
                 TextColumn::make('due_date')->date('d.m.Y')->sortable(),
                 TextColumn::make('updated_at')->dateTime('d.m.Y H:i')->sortable(),
             ])

@@ -22,7 +22,6 @@ class Article extends Model implements ProvidesActivityTitle
         'due_date',
         'published_at',
         'is_featured',
-        'reading_minutes',
     ];
 
     protected $casts = [

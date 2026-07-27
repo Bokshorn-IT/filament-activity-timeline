@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Workbench\Database\Seeders;
 
+use Carbon\CarbonInterface;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Activitylog\Facades\CauserResolver;
@@ -15,9 +16,13 @@ use Workbench\App\Models\Revision;
 use Workbench\App\Models\User;
 
 /**
- * Builds a history worth looking at: the same records edited by different
- * people over time, so the timeline has enum, date, foreign-key and boolean
- * changes to render rather than a single "created" entry.
+ * Builds a history worth looking at: one article written, handed to someone
+ * else and then published, so the timeline has an enum, a date, a foreign key
+ * and a boolean to render rather than a single "created" entry.
+ *
+ * Everything here is written in one go, which would leave every entry stamped
+ * the same second, so each one is backdated afterwards to the age it would
+ * have had in a real application.
  */
 class DatabaseSeeder extends Seeder
 {
@@ -46,59 +51,116 @@ class DatabaseSeeder extends Seeder
             'title' => 'Designing for offline first',
             'status' => ArticleStatus::Draft,
             'author_id' => $alex->id,
-            'due_date' => '2026-07-31',
-            'reading_minutes' => 6,
+            'due_date' => now()->addDays(4)->toDateString(),
+            'is_featured' => false,
         ]);
 
-        $revision = Revision::query()->create([
-            'article_id' => $article->id,
-            'summary' => 'Restructured the caching section',
-            'word_count' => 1180,
-        ]);
+        $this->backdateLastActivity(now()->subDays(8)->setTime(9, 14));
 
-        $article->update([
-            'status' => ArticleStatus::InReview,
-            'author_id' => $sam->id,
-            'reading_minutes' => 9,
-        ]);
-
-        $revision->update(['word_count' => 1420]);
-
-        // An author acting on their own piece, so the timeline shows a causer
-        // that is not a back-office user.
+        // Handed over to the other author, with the deadline pushed back and
+        // the article promoted at the same time.
         CauserResolver::setCauser($sam);
 
         $article->update([
-            'due_date' => '2026-08-14',
+            'author_id' => $sam->id,
+            'due_date' => now()->addDays(18)->toDateString(),
             'is_featured' => true,
         ]);
 
-        // An unattended write: nobody signed in, so it renders as System.
-        CauserResolver::setCauser(null);
+        $this->backdateLastActivity(now()->subDays(3)->setTime(14, 8));
 
-        $article->update([
-            'status' => ArticleStatus::Published,
-            'published_at' => '2026-07-24 09:30:00',
-        ]);
-
-        activity()->performedOn($article)->event('published')->log('published');
-
+        // Publishing is a single thing that happened, so it is logged as one
+        // entry under its own event name rather than as a generic update. The
+        // write itself is silenced and the before/after is passed in by hand.
         CauserResolver::setCauser($editor);
+
+        $publishedAt = now()->subHours(3)->startOfHour();
+
+        activity()->withoutLogs(fn () => $article->update([
+            'status' => ArticleStatus::Published,
+            'published_at' => $publishedAt,
+        ]));
+
+        activity()
+            ->performedOn($article)
+            ->withProperties([
+                'old' => [
+                    'status' => ArticleStatus::Draft->value,
+                    'published_at' => null,
+                ],
+                'attributes' => [
+                    'status' => ArticleStatus::Published->value,
+                    'published_at' => $publishedAt->toDateTimeString(),
+                ],
+            ])
+            ->event('published')
+            ->log('published');
+
+        $this->backdateLastActivity($publishedAt);
+
+        $this->seedSupportingArticles($alex, $sam);
+    }
+
+    /**
+     * The rest of the list, so the resource has something to filter. One of
+     * them carries a revision, which is what the timeline action's
+     * withRelations() option pulls in.
+     */
+    private function seedSupportingArticles(Author $alex, Author $sam): void
+    {
+        $age = 26;
 
         foreach ([
             ['Shipping a design system on a budget', ArticleStatus::Published, $alex],
             ['What we learned migrating to queues', ArticleStatus::InReview, $sam],
             ['A quieter approach to notifications', ArticleStatus::Draft, $alex],
             ['Retiring the legacy importer', ArticleStatus::Archived, $sam],
-        ] as [$title, $status, $author]) {
+        ] as $index => [$title, $status, $author]) {
             $extra = Article::query()->create([
                 'title' => $title,
                 'status' => ArticleStatus::Draft,
                 'author_id' => $author->id,
-                'reading_minutes' => random_int(4, 12),
             ]);
 
+            $this->backdateLastActivity(now()->subDays($age)->setTime(10, 5));
+
+            if ($index === 0) {
+                $revision = Revision::query()->create([
+                    'article_id' => $extra->id,
+                    'summary' => 'Restructured the caching section',
+                    'word_count' => 1180,
+                ]);
+
+                $this->backdateLastActivity(now()->subDays($age - 1)->setTime(11, 2));
+
+                $revision->update(['word_count' => 1420]);
+
+                $this->backdateLastActivity(now()->subDays($age - 2)->setTime(16, 45));
+            }
+
             $extra->update(['status' => $status]);
+
+            $this->backdateLastActivity(now()->subDays($age - 3)->setTime(15, 20));
+
+            $age -= 5;
         }
+    }
+
+    /**
+     * Move the entry that was just written back in time. Activities are
+     * created with the current timestamp and nothing in activitylog lets you
+     * set it up front, so it is rewritten here.
+     */
+    private function backdateLastActivity(CarbonInterface $at): void
+    {
+        $id = Activity::query()->max('id');
+
+        if ($id === null) {
+            return;
+        }
+
+        Activity::query()
+            ->whereKey($id)
+            ->update(['created_at' => $at, 'updated_at' => $at]);
     }
 }

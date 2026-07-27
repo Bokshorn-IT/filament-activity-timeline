@@ -25,7 +25,6 @@ return new class extends Migration
             $table->date('due_date')->nullable();
             $table->dateTime('published_at')->nullable();
             $table->boolean('is_featured')->default(false);
-            $table->unsignedInteger('reading_minutes')->nullable();
             $table->timestamps();
         });
 
