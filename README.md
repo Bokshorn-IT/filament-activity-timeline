@@ -311,9 +311,9 @@ ActivityTimelinePlugin::make()
 
 ## Trying it
 
-The repository ships a demo application. It runs a stock Filament panel with a
-few articles that already have a history worth looking at, which is where the
-screenshot above comes from:
+The repository ships a demo application, and the screenshots are taken from it.
+It runs a stock Filament panel with a few articles that already have a history
+worth looking at:
 
 ```bash
 composer install
@@ -327,30 +327,30 @@ Then open `/demo` and sign in with `demo@example.com` / `password`.
 
 <div class="filament-hidden">
 
-## Testing
+**Testing**
 
 ```bash
 composer test
 ```
 
-## Changelog
+**Changelog**
 
 Please see [CHANGELOG](CHANGELOG.md) for what has changed recently.
 
-## Contributing
+**Contributing**
 
 Please see [CONTRIBUTING](.github/CONTRIBUTING.md) for details.
 
-## Security Vulnerabilities
+**Security Vulnerabilities**
 
 Please review [our security policy](SECURITY.md) on how to report security vulnerabilities.
 
-## Credits
+**Credits**
 
 - [Johannes Bokshorn](https://github.com/Bokshorn-IT)
 - [All Contributors](../../contributors)
 
-## License
+**License**
 
 The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
 
