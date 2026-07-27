@@ -2,6 +2,13 @@
 
 All notable changes to `filament-activity-timeline` will be documented in this file.
 
+## v1.0.1 - 2026-07-27
+
+No changes to the shipped code.
+
+- Demo application under `workbench/`, runnable with `composer serve`
+- README: screenshots, a compatibility table and a section on running the demo
+
 ## v1.0.0 - 2026-07-26
 
 Initial release.
