@@ -26,10 +26,11 @@ class TestCustomer extends Model implements ProvidesActivityTitle
 
     public function getActivitylogOptions(): LogOptions
     {
-        return LogOptions::defaults()
-            ->logOnly(['name', 'notes'])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs();
+        return TestLogOptions::dontLogEmpty(
+            LogOptions::defaults()
+                ->logOnly(['name', 'notes'])
+                ->logOnlyDirty(),
+        );
     }
 
     public function activityTitle(): ?string

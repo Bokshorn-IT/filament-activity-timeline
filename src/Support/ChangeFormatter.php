@@ -48,17 +48,8 @@ class ChangeFormatter
      */
     public function rows(Activity $activity): Collection
     {
-        $properties = $activity->properties;
-        $new = $properties->get('attributes', []);
-        $old = $properties->get('old', []);
-
-        if (! is_array($new)) {
-            $new = [];
-        }
-
-        if (! is_array($old)) {
-            $old = [];
-        }
+        $new = ActivityChanges::attributes($activity);
+        $old = ActivityChanges::old($activity);
 
         $subjectType = $activity->subject_type;
 

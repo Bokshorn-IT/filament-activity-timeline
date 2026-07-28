@@ -28,7 +28,7 @@
         "php": "^8.3",
         "filament/filament": "^5.0",
         "illuminate/contracts": "^12.0|^13.0",
-        "spatie/laravel-activitylog": "^4.12",
+        "spatie/laravel-activitylog": "^4.12|^5.0",
         "spatie/laravel-package-tools": "^1.92"
     },
     "require-dev": {
@@ -43,6 +43,9 @@
         }
     },
     "autoload-dev": {
+        "files": [
+            "tests/activitylog-compat.php"
+        ],
         "psr-4": {
             "BokshornIt\\FilamentActivityTimeline\\Tests\\": "tests/",
             "Workbench\\App\\": "workbench/app/",

@@ -39,11 +39,13 @@ There are two ways to read the log: that slide-over timeline on a record, and a 
 
 ## Compatibility
 
-| Plugin | Filament | Laravel | PHP |
-|---|---|---|---|
-| 1.x | 5.x | 12.x, 13.x | 8.3+ |
+| Plugin | Filament | Laravel | PHP | activitylog |
+|---|---|---|---|---|
+| 1.x | 5.x | 12.x, 13.x | 8.3+ | 4.12+, 5.x |
 
 Every one of those is covered by CI, on SQLite, MySQL 8 and PostgreSQL 17.
+
+activitylog v5 keeps the before/after values in an `attribute_changes` column instead of inside `properties`. The plugin reads whichever your installed version writes, so there is nothing to configure either way: follow [Spatie's upgrade guide](https://github.com/spatie/laravel-activitylog/blob/main/UPGRADING.md) when you move, and your timelines carry on reading the same. Note that v5 itself requires PHP 8.4 and Laravel 12.
 
 ## Installation
 

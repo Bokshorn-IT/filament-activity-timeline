@@ -44,10 +44,11 @@ class TestInvoice extends Model implements ProvidesActivityTitle
 
     public function getActivitylogOptions(): LogOptions
     {
-        return LogOptions::defaults()
-            ->logFillable()
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs();
+        return TestLogOptions::dontLogEmpty(
+            LogOptions::defaults()
+                ->logFillable()
+                ->logOnlyDirty(),
+        );
     }
 
     public function activityTitle(): ?string

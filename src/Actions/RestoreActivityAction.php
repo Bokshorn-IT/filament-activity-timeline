@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace BokshornIt\FilamentActivityTimeline\Actions;
 
 use BokshornIt\FilamentActivityTimeline\ActivityTimelinePlugin;
+use BokshornIt\FilamentActivityTimeline\Support\ActivityChanges;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Spatie\Activitylog\Models\Activity;
@@ -53,7 +54,7 @@ class RestoreActivityAction extends Action
             return false;
         }
 
-        if (blank($activity->properties->get('old', []))) {
+        if (blank(ActivityChanges::old($activity))) {
             return false;
         }
 
@@ -73,7 +74,7 @@ class RestoreActivityAction extends Action
         $activity->loadMissing('subject');
 
         $subject = $activity->subject;
-        $old = $activity->properties->get('old', []);
+        $old = ActivityChanges::old($activity);
 
         if ($subject === null || blank($old) || ! static::isRestorable($activity)) {
             Notification::make()

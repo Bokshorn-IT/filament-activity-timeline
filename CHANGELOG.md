@@ -2,6 +2,15 @@
 
 All notable changes to `filament-activity-timeline` will be documented in this file.
 
+## v1.1.0 - 2026-07-29
+
+Support for `spatie/laravel-activitylog` v5 alongside v4 ([#1](https://github.com/Bokshorn-IT/filament-activity-timeline/issues/1)).
+
+v5 moved the before/after values out of `properties` into their own `attribute_changes` column. The plugin now reads whichever the installed version writes, so timelines, diffs and restore behave the same on both. Nothing to change in your app: the constraint widens to `^4.12|^5.0` and v4 stays supported.
+
+- Change pairs read through `Support\ActivityChanges`, covering both storage shapes - and a custom activity model that forgot the cast
+- CI runs the full suite against activitylog v4 and v5
+
 ## v1.0.1 - 2026-07-27
 
 No changes to the shipped code.
