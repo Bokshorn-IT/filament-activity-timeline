@@ -5,13 +5,15 @@ declare(strict_types=1);
 namespace BokshornIt\FilamentActivityTimeline\Tests\Fixtures;
 
 use BokshornIt\FilamentActivityTimeline\Contracts\ProvidesActivityTitle;
+use BokshornIt\FilamentActivityTimeline\Contracts\ProvidesActivityValues;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use RuntimeException;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-class TestInvoice extends Model implements ProvidesActivityTitle
+class TestInvoice extends Model implements ProvidesActivityTitle, ProvidesActivityValues
 {
     use LogsActivity;
 
@@ -54,6 +56,20 @@ class TestInvoice extends Model implements ProvidesActivityTitle
     public function activityTitle(): ?string
     {
         return $this->number;
+    }
+
+    /**
+     * The one thing the schema cannot say: a total is money, not a number.
+     * The key that throws is here to prove a broken implementation cannot take
+     * a timeline down with it.
+     */
+    public function formatActivityValue(string $key, mixed $value): ?string
+    {
+        return match ($key) {
+            'total' => number_format((float) $value, 2, ',', '.').' EUR',
+            'unrenderable' => throw new RuntimeException('Boom.'),
+            default => null,
+        };
     }
 
     public function testCustomer(): BelongsTo

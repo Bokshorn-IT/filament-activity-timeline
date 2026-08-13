@@ -2,6 +2,16 @@
 
 All notable changes to `filament-activity-timeline` will be documented in this file.
 
+## v1.2.0 - 2026-08-13
+
+Models can now render their own logged values.
+
+A diff resolves what the schema tells it, which leaves the columns whose meaning only the application knows: `total_cents` printed as 2200 rather than 22,00 EUR, a `decimal:3` quantity as "1.000", a custom date cast as a raw ISO string. Implement the new `ProvidesActivityValues` contract and the model answers for the columns it knows, returning null for the rest.
+
+- `Contracts\ProvidesActivityValues`, consulted before the formatter's own cast handling and after empty values and booleans are settled
+- A value formatter that throws is caught and falls through, so a broken implementation cannot take a timeline down with it
+- Subject instances resolve once per class rather than once per value, and a subject class that no longer instantiates no longer breaks the entry
+
 ## v1.1.0 - 2026-07-29
 
 Support for `spatie/laravel-activitylog` v5 alongside v4 ([#1](https://github.com/Bokshorn-IT/filament-activity-timeline/issues/1)).

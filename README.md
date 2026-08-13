@@ -30,6 +30,7 @@ There are two ways to read the log: that slide-over timeline on a record, and a 
 
 - Record timeline, optionally pulling related records into the same stream
 - Readable diffs: enum casts as labels, date casts as dates, foreign keys as the related record's name, booleans as words
+- Models can render their own columns, for the money, quantities and custom casts no schema explains
 - Activity resource with filters for event, record type, causer and date range
 - Your own events beyond create/update/delete, each with its own icon and colour
 - Users, customers, API clients and unattended jobs are told apart as causers
@@ -174,6 +175,30 @@ return [
 ```
 
 Unmapped columns fall back to a headline-cased version of the key, so a new column is readable straight away and you can fill these in gradually. Point it somewhere else with `->fieldLabelNamespace('...')`.
+
+### Field values
+
+Diffs resolve what the schema can tell them: enum casts, date casts, foreign keys, morph columns, booleans. What a column *means* is a different matter - that `total_cents` is money, that a quantity carries three decimals it should not show, that a custom cast holds a calendar day. Implement `ProvidesActivityValues` and the model decides for the columns it knows:
+
+```php
+use BokshornIt\FilamentActivityTimeline\Contracts\ProvidesActivityValues;
+
+class Invoice extends Model implements ProvidesActivityValues
+{
+    public function formatActivityValue(string $key, mixed $value): ?string
+    {
+        if (str_ends_with($key, '_cents')) {
+            return Number::currency((int) $value / 100, 'EUR');
+        }
+
+        return null;
+    }
+}
+```
+
+Return null for everything else and it falls through to the formatter's own handling, so claiming one column costs you nothing on the rest. The value arrives as it was logged - the raw database value, not the cast one - and empty values and booleans are settled before the model is asked, so an implementation never has to answer for those. A formatter that throws is caught and falls through, since a diff has to render either way.
+
+Put it on a base model or a trait of your own to cover a whole application at once.
 
 ### Your own events
 

@@ -61,6 +61,30 @@ it('leaves a foreign key alone when the related record is gone', function (): vo
         ->toBe('999');
 });
 
+it('lets the model render a value the schema cannot explain', function (): void {
+    expect($this->formatter->formatValue(TestInvoice::class, 'total', '1234.5'))
+        ->toBe('1.234,50 EUR');
+});
+
+it('keeps its own handling for the columns a model does not claim', function (): void {
+    expect($this->formatter->formatValue(TestInvoice::class, 'status', TestInvoiceStatus::Sent->value))
+        ->toBe('Versendet');
+});
+
+it('settles empty values before asking the model', function (): void {
+    expect($this->formatter->formatValue(TestInvoice::class, 'total', null))->toBe('-');
+});
+
+it('falls through when a model value formatter throws', function (): void {
+    expect($this->formatter->formatValue(TestInvoice::class, 'unrenderable', 'RE-001'))
+        ->toBe('RE-001');
+});
+
+it('leaves models that render nothing of their own alone', function (): void {
+    expect($this->formatter->formatValue(TestInvoiceLine::class, 'description', 'Beratung'))
+        ->toBe('Beratung');
+});
+
 it('falls back to a headline-cased field label when no translation exists', function (): void {
     expect($this->formatter->fieldLabel('test_customer_id'))->toBe('Test Customer Id');
 });

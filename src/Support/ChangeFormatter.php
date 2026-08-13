@@ -6,6 +6,7 @@ namespace BokshornIt\FilamentActivityTimeline\Support;
 
 use BokshornIt\FilamentActivityTimeline\ActivityTimelinePlugin;
 use BokshornIt\FilamentActivityTimeline\Contracts\ProvidesActivityTitle;
+use BokshornIt\FilamentActivityTimeline\Contracts\ProvidesActivityValues;
 use Filament\Support\Contracts\HasLabel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -33,6 +34,14 @@ class ChangeFormatter
      * @var array<string, string|null>
      */
     protected array $relatedLabels = [];
+
+    /**
+     * A blank instance per subject class, since casts, relationships and the
+     * value hook are all read off the class rather than off a record.
+     *
+     * @var array<class-string, Model|null>
+     */
+    protected array $subjects = [];
 
     public function __construct(
         protected readonly ActivityTimelinePlugin $plugin,
@@ -102,6 +111,14 @@ class ChangeFormatter
             return $this->placeholder();
         }
 
+        // What a column means is the model's to say, and it says so before
+        // anything the schema could tell us: money, quantities, a custom cast.
+        $own = $this->modelValue($subjectType, $key, $value);
+
+        if ($own !== null) {
+            return $own;
+        }
+
         if (is_array($value)) {
             return json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: $this->placeholder();
         }
@@ -147,18 +164,38 @@ class ChangeFormatter
     }
 
     /**
+     * The model's own rendering of a value, if it offers one.
+     */
+    protected function modelValue(?string $subjectType, string $key, mixed $value): ?string
+    {
+        $subject = $this->subject($subjectType);
+
+        if (! $subject instanceof ProvidesActivityValues) {
+            return null;
+        }
+
+        try {
+            $formatted = $subject->formatActivityValue($key, $value);
+        } catch (Throwable) {
+            return null;
+        }
+
+        return $formatted === null || $formatted === '' ? null : $formatted;
+    }
+
+    /**
      * Resolve a foreign key ("customer_id" => 14) to the related record's
      * title, via the subject's BelongsTo relationship of the same name.
      */
     protected function resolveRelatedLabel(?string $subjectType, string $key, mixed $value): ?string
     {
-        if (! $subjectType || ! class_exists($subjectType) || ! Str::endsWith($key, '_id')) {
+        if (! Str::endsWith($key, '_id')) {
             return null;
         }
 
         $relationName = Str::camel(Str::beforeLast($key, '_id'));
 
-        $subject = new $subjectType;
+        $subject = $this->subject($subjectType);
 
         if (! $subject instanceof Model || ! method_exists($subject, $relationName)) {
             return null;
@@ -202,19 +239,33 @@ class ChangeFormatter
 
     protected function resolveCast(?string $subjectType, string $key): ?string
     {
+        $cast = $this->subject($subjectType)?->getCasts()[$key] ?? null;
+
+        return is_string($cast) ? $cast : null;
+    }
+
+    /**
+     * A blank instance of the subject class. An entry whose subject class was
+     * renamed or removed since it was logged still has to render, so a class
+     * that will not instantiate resolves to null rather than throwing.
+     */
+    protected function subject(?string $subjectType): ?Model
+    {
         if (! $subjectType || ! class_exists($subjectType)) {
             return null;
         }
 
-        $subject = new $subjectType;
-
-        if (! $subject instanceof Model) {
-            return null;
+        if (array_key_exists($subjectType, $this->subjects)) {
+            return $this->subjects[$subjectType];
         }
 
-        $cast = $subject->getCasts()[$key] ?? null;
+        try {
+            $subject = new $subjectType;
+        } catch (Throwable) {
+            $subject = null;
+        }
 
-        return is_string($cast) ? $cast : null;
+        return $this->subjects[$subjectType] = $subject instanceof Model ? $subject : null;
     }
 
     protected function isDateCast(?string $cast): bool
