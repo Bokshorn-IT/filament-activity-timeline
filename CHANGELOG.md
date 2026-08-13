@@ -2,6 +2,16 @@
 
 All notable changes to `filament-activity-timeline` will be documented in this file.
 
+## v1.3.0 - 2026-08-13
+
+Polymorphic foreign keys resolve to the record they point at.
+
+A morph column needs two values to be read - `notable_type` says which model, `notable_id` says which row - and the formatter only ever saw one at a time, so it printed the bare id. It now formats each side of a change against the rest of that side, which is where the type sits. No configuration: the pair is taken from the relationship itself, so any `MorphTo` following Laravel's own conventions resolves.
+
+- Morph types given as a morph map alias resolve for both columns of the pair
+- Foreign keys find soft-deleted records, whose name is usually the reason for resolving the key at all
+- `ChangeFormatter::formatValue()` takes the surrounding values as an optional fourth argument; calling it with three behaves as before
+
 ## v1.2.0 - 2026-08-13
 
 Models can now render their own logged values.

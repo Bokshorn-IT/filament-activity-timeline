@@ -8,6 +8,8 @@ use BokshornIt\FilamentActivityTimeline\Tests\Fixtures\TestCustomer;
 use BokshornIt\FilamentActivityTimeline\Tests\Fixtures\TestInvoice;
 use BokshornIt\FilamentActivityTimeline\Tests\Fixtures\TestInvoiceLine;
 use BokshornIt\FilamentActivityTimeline\Tests\Fixtures\TestInvoiceStatus;
+use BokshornIt\FilamentActivityTimeline\Tests\Fixtures\TestNote;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 beforeEach(function (): void {
     $this->formatter = ChangeFormatter::make();
@@ -83,6 +85,51 @@ it('falls through when a model value formatter throws', function (): void {
 it('leaves models that render nothing of their own alone', function (): void {
     expect($this->formatter->formatValue(TestInvoiceLine::class, 'description', 'Beratung'))
         ->toBe('Beratung');
+});
+
+it('resolves a morph column from the type logged beside it', function (): void {
+    $invoice = TestInvoice::create(['number' => 'RE-100']);
+
+    expect($this->formatter->formatValue(TestNote::class, 'notable_id', $invoice->id, [
+        'notable_type' => TestInvoice::class,
+    ]))->toBe('RE-100');
+});
+
+it('leaves a morph column alone when its type was not logged with it', function (): void {
+    $invoice = TestInvoice::create(['number' => 'RE-101']);
+
+    expect($this->formatter->formatValue(TestNote::class, 'notable_id', $invoice->id))
+        ->toBe((string) $invoice->id);
+});
+
+it('resolves a morph column through a morph map alias', function (): void {
+    Relation::morphMap(['invoice' => TestInvoice::class]);
+
+    $invoice = TestInvoice::create(['number' => 'RE-102']);
+
+    expect($this->formatter->formatValue(TestNote::class, 'notable_id', $invoice->id, [
+        'notable_type' => 'invoice',
+    ]))->toBe('RE-102');
+
+    Relation::morphMap([], merge: false);
+});
+
+it('labels a morph type given as a morph map alias', function (): void {
+    Relation::morphMap(['invoice' => TestInvoice::class]);
+
+    expect($this->formatter->formatValue(TestNote::class, 'notable_type', 'invoice'))
+        ->toBe('Test Invoice');
+
+    Relation::morphMap([], merge: false);
+});
+
+it('still names a foreign key whose record was soft deleted', function (): void {
+    $invoice = TestInvoice::create(['number' => 'RE-103']);
+    $invoice->delete();
+
+    expect($this->formatter->formatValue(TestNote::class, 'notable_id', $invoice->id, [
+        'notable_type' => TestInvoice::class,
+    ]))->toBe('RE-103');
 });
 
 it('falls back to a headline-cased field label when no translation exists', function (): void {

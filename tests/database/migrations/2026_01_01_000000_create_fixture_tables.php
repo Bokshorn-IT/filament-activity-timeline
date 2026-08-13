@@ -37,6 +37,7 @@ return new class extends Migration
             $table->boolean('is_paid')->default(false);
             $table->decimal('total', 10, 2)->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
 
         Schema::create('test_invoice_lines', function (Blueprint $table): void {
@@ -45,10 +46,18 @@ return new class extends Migration
             $table->string('description')->nullable();
             $table->timestamps();
         });
+
+        Schema::create('test_notes', function (Blueprint $table): void {
+            $table->id();
+            $table->nullableMorphs('notable');
+            $table->string('body')->nullable();
+            $table->timestamps();
+        });
     }
 
     public function down(): void
     {
+        Schema::dropIfExists('test_notes');
         Schema::dropIfExists('test_invoice_lines');
         Schema::dropIfExists('test_invoices');
         Schema::dropIfExists('test_users');

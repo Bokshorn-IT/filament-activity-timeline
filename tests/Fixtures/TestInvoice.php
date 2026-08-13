@@ -9,13 +9,14 @@ use BokshornIt\FilamentActivityTimeline\Contracts\ProvidesActivityValues;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use RuntimeException;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
 class TestInvoice extends Model implements ProvidesActivityTitle, ProvidesActivityValues
 {
-    use LogsActivity;
+    use LogsActivity, SoftDeletes;
 
     protected $table = 'test_invoices';
 

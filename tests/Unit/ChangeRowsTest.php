@@ -7,6 +7,7 @@ use BokshornIt\FilamentActivityTimeline\Support\ChangeFormatter;
 use BokshornIt\FilamentActivityTimeline\Tests\Fixtures\TestCustomer;
 use BokshornIt\FilamentActivityTimeline\Tests\Fixtures\TestInvoice;
 use BokshornIt\FilamentActivityTimeline\Tests\Fixtures\TestInvoiceStatus;
+use BokshornIt\FilamentActivityTimeline\Tests\Fixtures\TestNote;
 use Spatie\Activitylog\Models\Activity;
 
 it('builds a diff row marking what actually changed', function (): void {
@@ -55,6 +56,23 @@ it('resolves a foreign key inside a diff row', function (): void {
     expect($row)->not->toBeNull()
         ->and($row['old'])->toBe('Muster GmbH')
         ->and($row['new'])->toBe('Beispiel AG');
+});
+
+it('names the record a morph pair points at', function (): void {
+    $invoice = TestInvoice::create(['number' => 'RE-100']);
+
+    TestNote::create([
+        'notable_type' => TestInvoice::class,
+        'notable_id' => $invoice->id,
+        'body' => 'Angerufen',
+    ]);
+
+    $rows = ChangeFormatter::make()
+        ->rows(Activity::query()->latest('id')->first())
+        ->keyBy('label');
+
+    expect($rows['Notable Id']['new'])->toBe('RE-100')
+        ->and($rows['Notable Type']['new'])->toBe('Test Invoice');
 });
 
 it('omits keys the plugin was told to ignore', function (): void {

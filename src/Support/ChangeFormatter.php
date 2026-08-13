@@ -11,6 +11,8 @@ use Filament\Support\Contracts\HasLabel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -67,8 +69,11 @@ class ChangeFormatter
             ->map(function (string $key) use ($new, $old, $subjectType): array {
                 $hasNew = array_key_exists($key, $new);
 
-                $newValue = $this->formatValue($subjectType, $key, $hasNew ? $new[$key] : ($old[$key] ?? null));
-                $oldValue = $this->formatValue($subjectType, $key, $old[$key] ?? null);
+                // Each side is formatted against its own values, so a morph
+                // column reads the type it had at that point rather than the
+                // one it ended up with.
+                $newValue = $this->formatValue($subjectType, $key, $hasNew ? $new[$key] : ($old[$key] ?? null), $hasNew ? $new : $old);
+                $oldValue = $this->formatValue($subjectType, $key, $old[$key] ?? null, $old);
 
                 return [
                     'label' => $this->fieldLabel($key),
@@ -101,7 +106,13 @@ class ChangeFormatter
             : Str::headline($key);
     }
 
-    public function formatValue(?string $subjectType, string $key, mixed $value): string
+    /**
+     * @param  array<string, mixed>  $context  The other values logged on the
+     *                                         same side of the change, which
+     *                                         is where a morph column finds
+     *                                         the type belonging to its id.
+     */
+    public function formatValue(?string $subjectType, string $key, mixed $value, array $context = []): string
     {
         if (is_bool($value)) {
             return __('filament-activity-timeline::activity.boolean.'.($value ? 'true' : 'false'));
@@ -123,9 +134,14 @@ class ChangeFormatter
             return json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: $this->placeholder();
         }
 
-        // Morph columns hold a class name; show the model's label instead.
-        if (is_string($value) && Str::endsWith($key, '_type') && class_exists($value)) {
-            return SubjectResolver::make()->typeLabel($value);
+        // Morph columns hold a class name, or the alias a morph map gave it;
+        // show the model's label instead.
+        if (is_string($value) && Str::endsWith($key, '_type')) {
+            $class = $this->morphedClass($value);
+
+            if ($class !== null) {
+                return SubjectResolver::make()->typeLabel($class);
+            }
         }
 
         $cast = $this->resolveCast($subjectType, $key);
@@ -154,7 +170,7 @@ class ChangeFormatter
             }
         }
 
-        $related = $this->resolveRelatedLabel($subjectType, $key, $value);
+        $related = $this->resolveRelatedLabel($subjectType, $key, $value, $context);
 
         if ($related !== null) {
             return $related;
@@ -186,8 +202,10 @@ class ChangeFormatter
     /**
      * Resolve a foreign key ("customer_id" => 14) to the related record's
      * title, via the subject's BelongsTo relationship of the same name.
+     *
+     * @param  array<string, mixed>  $context
      */
-    protected function resolveRelatedLabel(?string $subjectType, string $key, mixed $value): ?string
+    protected function resolveRelatedLabel(?string $subjectType, string $key, mixed $value, array $context = []): ?string
     {
         if (! Str::endsWith($key, '_id')) {
             return null;
@@ -207,20 +225,63 @@ class ChangeFormatter
             return null;
         }
 
-        if (! $relation instanceof BelongsTo || $relation instanceof MorphTo) {
+        if (! $relation instanceof BelongsTo) {
             return null;
         }
 
-        $relatedClass = $relation->getRelated()::class;
+        $relatedClass = $relation instanceof MorphTo
+            ? $this->morphedClass($context[$relation->getMorphType()] ?? null)
+            : $relation->getRelated()::class;
+
+        if ($relatedClass === null) {
+            return null;
+        }
+
         $cacheKey = $relatedClass.':'.$value;
 
         if (array_key_exists($cacheKey, $this->relatedLabels)) {
             return $this->relatedLabels[$cacheKey];
         }
 
-        $related = $relation->getRelated()->newQuery()->find($value);
+        return $this->relatedLabels[$cacheKey] = $this->recordTitle($this->findRelated($relatedClass, $value));
+    }
 
-        return $this->relatedLabels[$cacheKey] = $this->recordTitle($related);
+    /**
+     * The record a foreign key points at, deleted ones included: history keeps
+     * referring to records that have since gone, and their name is the whole
+     * point of resolving the key.
+     *
+     * @param  class-string<Model>  $class
+     */
+    protected function findRelated(string $class, mixed $value): ?Model
+    {
+        $query = (new $class)->newQuery();
+
+        if (in_array(SoftDeletes::class, class_uses_recursive($class), true)) {
+            $query->withTrashed();
+        }
+
+        return $query->find($value);
+    }
+
+    /**
+     * The model behind a morph type: the class name itself, or whatever a
+     * morph map aliased it to. Null when the type is missing from the change
+     * or names something that is no longer a model.
+     *
+     * @return class-string<Model>|null
+     */
+    protected function morphedClass(mixed $type): ?string
+    {
+        if (! is_string($type) || $type === '') {
+            return null;
+        }
+
+        $class = Relation::getMorphedModel($type) ?? $type;
+
+        return is_string($class) && class_exists($class) && is_a($class, Model::class, true)
+            ? $class
+            : null;
     }
 
     /**
