@@ -16,6 +16,9 @@ class TestPanelProvider extends PanelProvider
             ->default()
             ->id('testing')
             ->path('testing')
+            ->resources([
+                TestContractResource::class,
+            ])
             ->plugin(
                 ActivityTimelinePlugin::make()
                     ->causerIcons([

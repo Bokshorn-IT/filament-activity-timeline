@@ -244,6 +244,26 @@ return [
 
 Configurable with `->subjectLabelNamespace()`. Without an entry, the class name is used.
 
+A record can provide its own type label with `ProvidesActivitySubjectLabel`:
+
+```php
+use BokshornIt\FilamentActivityTimeline\Contracts\ProvidesActivitySubjectLabel;
+
+class Document extends Model implements ProvidesActivitySubjectLabel
+{
+    public function activitySubjectLabel(): ?string
+    {
+        return $this->status === DocumentStatus::Signed
+            ? __('Contract')
+            : __('Draft');
+    }
+}
+```
+
+Null keeps the resource label. The record type filter and morph columns in a diff use the resource label.
+
+The "open record" link is only shown when the resource's `getEloquentQuery()` finds the record.
+
 ### Causers
 
 Not every actor is a user. Give each type its own icon:

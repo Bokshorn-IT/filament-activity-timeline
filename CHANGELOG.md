@@ -2,6 +2,11 @@
 
 All notable changes to `filament-activity-timeline` will be documented in this file.
 
+## v1.4.0 - 2026-09-22
+
+- `Contracts\ProvidesActivitySubjectLabel`: a subject provides its own record type label, null keeps the resource label
+- The subject link is only shown when the resource's `getEloquentQuery()` finds the record
+
 ## v1.3.0 - 2026-08-13
 
 Polymorphic foreign keys resolve to the record they point at.

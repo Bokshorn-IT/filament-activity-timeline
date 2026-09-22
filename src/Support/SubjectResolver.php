@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace BokshornIt\FilamentActivityTimeline\Support;
 
 use BokshornIt\FilamentActivityTimeline\ActivityTimelinePlugin;
+use BokshornIt\FilamentActivityTimeline\Contracts\ProvidesActivitySubjectLabel;
 use BokshornIt\FilamentActivityTimeline\Contracts\ProvidesActivityTitle;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Model;
@@ -39,8 +40,10 @@ class SubjectResolver
             return $this->plugin->getPlaceholder();
         }
 
-        $type = $this->typeLabel($activity->subject_type);
-        $title = $this->title($activity->subject);
+        $record = $activity->subject;
+        $label = $record instanceof ProvidesActivitySubjectLabel ? $record->activitySubjectLabel() : null;
+        $type = filled($label) ? (string) $label : $this->typeLabel($activity->subject_type);
+        $title = $this->title($record);
 
         if ($title === null) {
             return "{$type} #{$activity->subject_id}";
@@ -89,8 +92,8 @@ class SubjectResolver
 
     /**
      * A link to the subject on its own resource - its view page, or its edit
-     * page when it has no view page. Null when the record is gone or no
-     * resource manages it.
+     * page when it has no view page. Null when the record is gone, no
+     * resource manages it or the resource's query does not find it.
      */
     public function url(Activity $activity): ?string
     {
@@ -108,6 +111,10 @@ class SubjectResolver
         }
 
         try {
+            if (! $resource::getEloquentQuery()->whereKey($activity->subject->getKey())->exists()) {
+                return null;
+            }
+
             return $resource::getUrl($page, ['record' => $activity->subject]);
         } catch (Throwable) {
             return null;
