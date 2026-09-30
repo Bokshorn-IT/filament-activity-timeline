@@ -20,7 +20,7 @@ Accurate, and useless to look at. This package renders the same entry as **Statu
 
 <div class="filament-hidden">
 
-![The activity timeline in light and dark mode](https://raw.githubusercontent.com/Bokshorn-IT/filament-activity-timeline/main/screenshots/timeline.png)
+![The activity timeline in light and dark mode](https://raw.githubusercontent.com/Bokshorn-IT/filament-activity-timeline/main/screenshots/hero.png)
 
 </div>
 
