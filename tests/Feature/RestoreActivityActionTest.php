@@ -7,6 +7,7 @@ use BokshornIt\FilamentActivityTimeline\ActivityTimelinePlugin;
 use BokshornIt\FilamentActivityTimeline\Tests\Fixtures\TestCustomer;
 use BokshornIt\FilamentActivityTimeline\Tests\Fixtures\TestInvoice;
 use BokshornIt\FilamentActivityTimeline\Tests\Fixtures\TestInvoiceStatus;
+use Filament\Notifications\Notification;
 use Spatie\Activitylog\Models\Activity;
 
 it('allows restoring a model on the restorable list', function (): void {
@@ -81,10 +82,7 @@ it('says so instead of claiming success when there is nothing to restore', funct
 
     RestoreActivityAction::restore($activity);
 
-    $titles = collect(session('filament.notifications', []))->pluck('title');
-
-    expect($titles)->toContain(__('filament-activity-timeline::activity.restore.unchanged_title'))
-        ->and($titles)->not->toContain(__('filament-activity-timeline::activity.restore.restored_title'));
+    Notification::assertNotified(__('filament-activity-timeline::activity.restore.unchanged_title'));
 });
 
 it('restores an entry taken from a collection, where strict models forbid lazy loading', function (): void {
